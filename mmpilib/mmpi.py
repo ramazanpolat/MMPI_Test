@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 
-# 版权所有 (C) 2018.6.25 金盛羽。保留所有权利。
+# Copyright (C) 2018.6.25 Jin Shengyu. all rights reserved.
 # Copyright 2018.6.25 Shengyu Jin. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
