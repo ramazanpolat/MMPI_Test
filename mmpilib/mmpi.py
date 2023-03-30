@@ -16,7 +16,6 @@
 # limitations under the License.
 
 """
-本模块主用于处理和MMPI测试相关的函数功能，其中包含一份完整的MMPI测试问卷
 This module is mainly for processing functions about MMPI, including
 a complete questionnaire.
 """
@@ -30,610 +29,619 @@ from openpyxl.styles import Font, Alignment
 # for debug
 from random import randint
 
-# 指导语
 # Instruction
-Ins1 = """-----------------------------------------------------------------
-                       明尼苏达多项人格测验                      
+Ins1 = """-----------------------------------------------------------------                   
        Minnesota Multiphasic Per-sonality Inventory (MMPI)       
 -----------------------------------------------------------------
-简要介绍：明尼苏达多项人格测验（MMPI）是由明尼苏达大学教授哈瑟韦
-（S．R．Hathaway）和麦金力（J．C．Mckinley）于1942年制定的，它可以用
-于测试正常人的人格类型，也可以用于区分正常人和心理或精神疾病患者。上世
-纪末，在纪术茂先生等人多年研究和实践调查的基础上，形成了适用于中国本土
-的MMPI测验问卷和常模，从1980年我国即开始试用MMPI，近年来使用更为广泛，
-结果证明此测验在我国使用具有一定的信度与效度，有较高的临床参考价值。
+Brief introduction: The Minnesota Multiple Personality Inventory (MMPI) 
+was developed by Professor Hathaway of the University of Minnesota 37 (S.R. Hathaway) 
+and McKinley (J.C.Mckinley) formulated in 1942, it can be used to test the 
+personality types of normal people and can also be used to distinguish 
+normal people from those with mental or mental illness. 
+last world 39 At the end of the century, on the basis of years of research and 
+practical investigations by Mr. Ji Shumao and others, the 40 MMPI test questionnaires and norms, 
+my country began to try MMPI in 1980, 
+and it has been used more widely in recent years. 
+41 The results prove that this test has a certain 
+reliability and validity in our country, and has a 
+high clinical reference value.
+
 -----------------------------------------------------------------
-重要提醒：本测验属于专业心理测量手段具有临床参考意义，须在相关专业人士
-指导下进行使用和解读，个人请慎用！                                 
+Important reminder: 
+This test is a professional psychological measurement method with 
+clinical reference significance, and it must be tested by relevant 
+professionals. 51 Use and interpret under guidance, please use with caution!                         
 -----------------------------------------------------------------"""
 
 Ins2 = """-----------------------------------------------------------------
-指导语：本测验由许多与你有关的问题所组成，当你阅读每一个题目时，请考虑
-是否符合你现在的行为、感情、态度或意见。如果情况符合请输入“1”，否则输
-入“0”，并在确认后敲击“回车”键以完成本题的作答。请尽快填写你读完题目后
-的第一印象，不要在每一道题上花费太多时间思考。个性各有不同，答案是无所
-谓对与不对，好与不好的，完全不必有任何顾虑，请按照你的实际情况作答即可。
+Instructions: This quiz consists of many questions that are relevant to you. 
+As you read each question, please consider if it fits your current behaviour, 
+feelings, attitude or opinion. If so, please enter "1", otherwise enter enter "0" 
+and press the "Enter" key after confirmation to complete the answer to this question. 
+Please fill in as soon as possible after you read the title.
+Don't spend too much time thinking about each question. 
+Personality is different, the answer is nothing 61 Whether it is right or wrong,
+good or bad, there is no need to worry about it at all. 
+
+Please answer according to your actual situation.
 -----------------------------------------------------------------
-答题样例：
-x. 我的性别是
-1. 男    0. 女
+sample answer：
+x. my gender is
+1. male    0. female
 > 1
 -----------------------------------------------------------------"""
 
-
-# 566项MMPI问卷中的问题
 # 566 questions of MMPI questionnaire
 Que = {
-    1: '我喜欢看科技方面的新闻',
-    2: '我的胃口很好',
-    3: '我早上起来的时候，多半觉得睡眠充足，头脑清醒',
-    4: '我想我会喜欢图书管理员的工作',
-    5: '我睡觉时很容易被吵醒',
-    6: '我喜欢看与犯罪有关的新闻',
-    7: '我的手脚经常是很暖和的',
-    8: '我的日常生活中，充满了使我感兴趣的事情',
-    9: '我现在工作（学习）的能力，和从前差不多',
-    10: '我的喉咙里总好像有一块东西堵着似的',
-    11: '一个人应该去了解自己的梦，并从中得到指导或警告',
-    12: '我喜欢看侦探小说或神秘小说',
-    13: '我总是在很紧张的情况下工作',
-    14: '我每个月至少有一、二次拉肚子',
-    15: '偶尔我会想到一些坏得说不出口的事',
-    16: '我深信生活对我是不公平的',
-    17: '我的父亲是一个好人',
-    18: '我很少有便秘的毛病',
-    19: '当我找到一件新的工作时，总喜欢别人秘密告诉我，我应该接近谁',
-    20: '我的性生活是满意的',
-    21: '有时我非常想离开家',
-    22: '有时我会哭一阵笑一阵，连自己也不能控制',
-    23: '恶心和呕吐的毛病使我苦恼',
-    24: '似乎没有一个人理解我',
-    25: '我想我会喜欢当一名歌唱家',
-    26: '当我处境困难的时候，我觉得最好是不开口',
-    27: '有时我觉得有鬼神附在我身上',
-    28: '当别人惹了我时，我觉得只要有机会就应报复，这是理所当然的',
-    29: '我有胃酸过多的毛病，一星期要犯好几次',
-    30: '有时我真想骂人',
-    31: '每隔几个晚上我就做噩梦',
-    32: '我发现我很难把注意力集中到一件工作上',
-    33: '我曾经有过很特别、很奇怪的体验',
-    34: '我时常咳嗽',
-    35: '假如不是有人和我作对，我一定会有更大的成就',
-    36: '我很少担心自己的健康',
-    37: '我从来没有因我的性方面的行为而遇到麻烦',
-    38: '我小的时候，有一段时间我干过小偷小摸的事',
-    39: '有时我真想摔东西',
-    40: '有很多时候我宁愿坐着空想，而不愿做任何事情',
-    41: '我曾一连几天、几个星期、几个月什么也不想干，因为我总是提不起精神',
-    42: '我家里人不喜欢我选择的工作（或将要选择的职业）',
-    43: '我睡得不安稳，容易被惊醒',
-    44: '我常觉得我的头到处都疼',
-    45: '有时我也讲假话',
-    46: '我现在的判断力比以往任何时候都好',
-    47: '每星期至少有一、二次，我突然觉得无缘无故地全身发热',
-    48: '当我与人相处的时候，听到别人谈论稀奇古怪的事，我就心烦',
-    49: '最好是把所有的法律全都废除',
-    50: '有时我觉得我的灵魂离开了我的身体',
-    51: '我的身体和我的大多数朋友一样健康',
-    52: '遇到同学或不常见的朋友，除非他们先向我打招呼，不然我就装作没看见',
-    53: '一位牧师（和尚、道士、神父、阿訇等教士）能用祈祷和把手放在病人头上来治病',
-    54: '认识我的人差不多都喜欢我',
-    55: '我从来没有因为胸痛或心痛而感到苦恼',
-    56: '我小时候，曾经因为胡闹而受过学校的处分',
-    57: '我和别人一见面就熟了，或者说我是自来熟的性格',
-    58: '一切事情都由老天爷或命运安排好了',
-    59: '我时常得听从某些人的指挥，其实他们还不如我高明',
-    60: '我不是每天都看报纸上的每一篇社论',
-    61: '我从未有过正常的生活',
-    62: '我身体的某些部分常有像火烧、刺痛、虫爬或麻木的感觉',
-    63: '我的大便不难控制',
-    64: '有时我会不停地做一件事，直到别人都感到厌烦',
-    65: '我爱我的父亲',
-    66: '我能在我周围看到其他人所看不到的东西、动物或人',
-    67: '我希望我能像别人那样快乐',
-    68: '我几乎从未感到过脖子（颈部）后面疼痛',
-    69: '同性别的人对我有很强的吸引力',
-    70: '我过去曾喜欢玩“丢手帕”之类的游戏',
-    71: '我觉得许多人为了得到别人的同情和帮助，而喜欢夸大自己的不幸',
-    72: '我为每隔几天或经常感到心口（胃）不舒服而烦恼',
-    73: '我是个重要的人物',
-    74: 'm我总希望我是个女人f我从不因为我是女人而遗憾',
-    75: '我有时发怒',
-    76: '我时常感到悲观失望',
-    77: '我喜欢看爱情小说',
-    78: '我喜欢诗',
-    79: '我的感情不易受伤害',
-    80: '我有时捉弄动物',
-    81: '我想我会喜欢干森林管理员那一类的工作',
-    82: '和人争辩的时候，我常争不过别人',
-    83: '凡是有能力而且愿意吃苦的人都会有很好的成功机会',
-    84: '现在，我发现自己很容易自暴自弃',
-    85: '有时我被别人的东西，如鞋、手套等等所强烈吸引，虽然这些东西对我毫无用处，但我总想摸摸它或把它偷来',
-    86: '我确实缺少自信心',
-    87: '我愿意做一名花匠',
-    88: '我总觉得人生是有价值的',
-    89: '要使大多数人相信事实的真相，是要经过一番辩论的',
-    90: '有时我将本该今天做的事，拖到明天去做',
-    91: '我不在乎别人拿我开玩笑',
-    92: '我想当个护士',
-    93: '我觉得大多数人是为了向上爬而不惜说谎的',
-    94: '许多事情，我做过以后就后悔了',
-    95: '我几乎每星期都去教堂（或常去寺庙之类的宗教场所）',
-    96: '我很少和家人争吵',
-    97: '有时我有一种强烈的冲动，想去做一些惊人或有害的事',
-    98: '我相信善有善报，恶有恶报',
-    99: '我喜欢参加热闹的聚会',
-    100: '我曾碰到一些千头万绪的问题，使我感到犹豫不决',
-    101: '我认为女性在性生活方面，应该和男性有同等的自由',
-    102: '我认为最难的是控制我自己',
-    103: '我很少有肌肉抽筋或颤抖的毛病',
-    104: '我似乎对什么事情有都不在乎',
-    105: '我身体不舒服的时候，有时会发脾气',
-    106: '我总觉得我自己好像做错了什么事或犯了什么罪',
-    107: '我经常是快乐的',
-    108: '我时常觉得头胀鼻塞似的',
-    109: '有些人太霸道，即使我明知他们是对的，也要和他们对着干',
-    110: '有人想害我',
-    111: '我从来没有为寻求刺激而去做危险的事',
-    112: '我时常认为必须坚持那些我认为正确的事',
-    113: '我相信法制',
-    114: '我常觉得头上好像有一根绷得紧紧的带子',
-    115: '我相信人死后还会有“来世”',
-    116: '我更喜欢我下了赌的比赛或游戏',
-    117: '大部分人之所以是诚实的，主要是因为怕被别人识破',
-    118: '我在上学的时候，有时因胡闹而被教导主任或者校长叫去',
-    119: '我说话总是那样不快也不慢，不含糊也不嘶哑',
-    120: '我在外边和朋友们一起吃饭的时候，比在家规矩得多',
-    121: '我相信有人暗算我',
-    122: '我似乎和我周围的人一样精明能干',
-    123: '我相信有人跟踪我',
-    124: '大多数人不惜用不正当的手段谋取利益，而不愿失掉机会',
-    125: '我的胃有很多毛病',
-    126: '我喜欢戏剧或歌舞剧',
-    127: '我知道我的烦恼是谁造成的',
-    128: '看到血的时候，我既不害怕也不难受',
-    129: '我自己往往弄不清为什么会这样爱生气或发牢骚',
-    130: '我从来没有吐过血，或咯过血',
-    131: '我不为得病而担心',
-    132: '我喜欢栽花或采集花草',
-    133: '我从来没有放纵自己发生过任何不正常的性行为',
-    134: '有时我的思想跑得太快都来不及表达出来',
-    135: '假如我能不买票，白看电影，而且不会被人发觉，我可能会去这样干的',
-    136: '如果别人待我好，我常常怀疑他们别有用心',
-    137: '我相信我的家庭生活，和我所认识的许多人一样幸福快乐',
-    138: '批评和责骂都使我非常伤心',
-    139: '有时我仿佛觉得我必须伤害自己或别人',
-    140: '我喜欢做饭烧菜',
-    141: '我的行为多半受我周围人的习惯所支配',
-    142: '有时我觉得我真是毫无用处',
-    143: '小时候我曾加入过一个团伙，有福共享，有难同当',
-    144: '我喜欢当兵',
-    145: '有时我想借故和别人打架',
-    146: '我喜欢到处乱逛，如果不让我这么做，我会不高兴',
-    147: '由于我经常不能当机立断，因而失去过许多良机',
-    148: '当我正在做一件重要事情的时候，如果有人向我请教或打扰我，我会不耐烦的',
-    149: '我以前写过日记',
-    150: '玩游戏的时候，我只想赢而不愿输',
-    151: '有人一直想毒害我',
-    152: '大多数晚上我睡觉时，不受什么思想干扰',
-    153: '近几年来大部分时间，我的身体都很好',
-    154: '我从来没有过抽风的毛病',
-    155: '现在我的体重既没有增加也没有减轻',
-    156: '有一段时间，我自己做过的事情全不记得了',
-    157: '我觉得我时常无缘无故地受到惩罚',
-    158: '我容易哭',
-    159: '我不能象从前那样理解我所读的东西了',
-    160: '在我一生中，我从来没有感觉到像现在这么好',
-    161: '有时候我觉得我的头顶一碰就疼',
-    162: '我痛恨别人以不正当的手段捉弄我，使我不得不认输',
-    163: '我不容易感到疲倦',
-    164: '我喜欢研究和阅读与我目前工作有关的东西',
-    165: '我喜欢结识一些重要人物，这样会使我感到自己也很重要',
-    166: '我很害怕从高处往下看',
-    167: '即使我家里有人犯法，我也不会紧张',
-    168: '我的脑子有点毛病',
-    169: '我不怕管理钱财',
-    170: '我不在乎别人对我有什么看法',
-    171: '在聚会当中，尽管有人出风头，如果让我也这样做，我会感到很不舒服',
-    172: '我时常需要努力使自己不显出怕羞的样子',
-    173: '我过去喜欢上学',
-    174: '我从来没有晕倒过',
-    175: '我很少头昏眼花',
-    176: '我不大怕蛇',
-    177: '我母亲是个好人',
-    178: '我的记忆力似乎还不错',
-    179: '有关性方面的问题使我烦恼',
-    180: '我觉得我遇到生人的时候就不知道说什么好了',
-    181: '无聊的时候，我就会惹事寻开心',
-    182: '我怕自己会发疯',
-    183: '我反对把钱给乞丐',
-    184: '我时常听到说话的声音，而又不知道它是从哪里来的',
-    185: '我的听觉显然和大多数人一样好',
-    186: '当我要做一件事的时候，我常发现我的手在发抖',
-    187: '我的双手并没有变得笨拙不灵',
-    188: '我能阅读很长的时间，而眼睛不觉得累',
-    189: '许多时候，我觉得浑身无力',
-    190: '我很少头痛',
-    191: '有时当我难为情的时候会出很多汗，这使我非常苦恼',
-    192: '我从未感到走路时不能保持平衡',
-    193: '我没哮喘这一类疾病',
-    194: '我曾有过几次突然不能控制自己的行动或言语，但当时我的头脑还很清醒',
-    195: '我所认识的人里，不是个个我都喜欢',
-    196: '我喜欢到我从来没有到过的地方去游览',
-    197: '有人一直想抢我的东西',
-    198: '我很少空想',
-    199: '我们应该把有关性方面的主要知识告诉孩子',
-    200: '有人想窃取我的思想和计划',
-    201: '但愿我不像现在这样的害羞',
-    202: '我相信我是一个受谴责的人',
-    203: '假若我是一个新闻记者，我会更喜欢报道娱乐圈的新闻',
-    204: '我喜欢做一个新闻记者',
-    205: '有时我会控制不住想要偷一点东西',
-    206: '我相信神，程度超过了大多数人',
-    207: '我喜欢许多不同种类的游戏或娱乐',
-    208: '我喜欢和异性说笑',
-    209: '我相信我的罪恶是不可饶恕的',
-    210: '每种东西吃起来味道都是一样的',
-    211: '我白天能睡觉，晚上却睡不着',
-    212: '我家里的人把我当作小孩子，而不当作大人看待',
-    213: '走路时，我会很小心地跨过人行道上的接缝',
-    214: '我从来没有为皮肤上长点东西而烦恼',
-    215: '我曾经饮酒过度',
-    216: '和别人的家庭比较，我的家庭缺乏爱和温暖',
-    217: '我时常感到自己在为某些事而担忧',
-    218: '当我看到动物受折磨的时候，我并不觉得特别难受',
-    219: '我想我会喜欢建筑承包的工作',
-    220: '我爱我的母亲',
-    221: '我喜欢科学',
-    222: '即使我以后不能报答恩惠，我也愿向朋友求助',
-    223: '我很喜欢打猎',
-    224: '我父母经常反对那些和我交往的人',
-    225: '有时我也会说说人家的闲话',
-    226: '我家里有些人的习惯，使我非常讨厌',
-    227: '有人告诉过我，我在睡觉中会起来梦游',
-    228: '有时我觉得我能非常容易地做出决定',
-    229: '我喜欢同时参加几个团体',
-    230: '我从来没有感到心慌气短',
-    231: '我喜欢谈论两性方面的事',
-    232: '我曾经立志要过一种以责任为重的生活，我一直照此谨慎从事',
-    233: '我有时阻止别人做某些事，并不是因为那种事有多大影响，而是在“道义”上我应该干预他',
-    234: '我很容易生气，但很快就能平静下来',
-    235: '我已独立自主，不受家庭的约束',
-    236: '我有很多心事',
-    237: '我的亲属几乎全都同情我',
-    238: '有时我十分烦躁，坐立不安',
-    239: '我曾经失恋过',
-    240: '我从来不为我的外貌而伤脑筋',
-    241: '我常梦到一些不可告人的事',
-    242: '我相信我并不比别人更为神经过敏',
-    243: '我几乎没有什么地方有疼痛的毛病',
-    244: '我的做事方法容易被人误解',
-    245: '我的父母和家里人对我过于挑剔',
-    246: '我脖子（颈部）上时常出现红斑',
-    247: '我有理由妒忌我家里的某些人',
-    248: '我有时无缘无故地，甚至在不顺利的时候也会觉得非常快乐',
-    249: '我相信死后的世界有魔鬼和地狱',
-    250: '有人想把世界上所能得到的东西都夺到手，我也不会责怪他',
-    251: '我曾经有一阵突然发呆（发愣）停止活动，不知道周围发生了什么事情',
-    252: '谁也不会关心他人的遭遇',
-    253: '有些人所做的事，虽然我认为是错的，但我仍然能够友好地对待他们',
-    254: '我喜欢和一些能互相开玩笑的人在一起相处',
-    255: '在选举的时候，有时我会选出我不熟悉的人',
-    256: '报纸上只有“漫画”最有趣',
-    257: '凡是我所做的事，我都指望能够成功',
-    258: '我相信有上帝（神）',
-    259: '做什么事情，我都感到难以开头',
-    260: '在学校里，我是个笨学生',
-    261: '如果我是个画家，我会更喜欢画花',
-    262: '我虽然相貌不好看，也不因此而苦恼',
-    263: '即使在冷天，我也很容易出汗。',
-    264: '我十分自信',
-    265: '对任何人都不信任，是比较安全的',
-    266: '每星期至少有一两次我十分兴奋',
-    267: '人多的时候，我不知道说些什么话好',
-    268: '在我心情不好的时候，总会有一些事使我高兴起来',
-    269: '我能很容易使人怕我，有时我故意这样作来寻开心',
-    270: '我离家外出的时候，从来不担心家里门窗是否关好或锁好了',
-    271: '我不会责怪一个欺负了自找没趣者的人',
-    272: '我有时精力充沛。',
-    273: '我的皮肤上有一两处麻木了',
-    274: '我的视力和往年一样好',
-    275: '有人控制着我的思想',
-    276: '我喜欢小孩子',
-    277: '有时我非常欣赏骗子的机智，我甚至希望他能侥幸混过去',
-    278: '我时常觉得有些陌生人用挑剔的眼光盯着我',
-    279: '我每天喝特别多的水',
-    280: '大多数人交朋友，是因为朋友对他们有用',
-    281: '我觉得我很少耳鸣',
-    282: '通常我爱家里的人，偶尔也恨他们',
-    283: '假如我是一个新闻记者，我会更愿意报道体育新闻',
-    284: '我确信别人正在议论我',
-    285: '偶尔我听了下流的笑话也会发笑',
-    286: '我独自一个人的时候，感到更快乐',
-    287: '使我害怕的事比我的朋友们少得多',
-    288: '恶心和呕吐的毛病使我苦恼',
-    289: '当一个罪犯可以通过能言善辩的律师开脱罪责时，我对法律感到厌恶',
-    290: '我总是在很紧张的情况下工作的',
-    291: '在我这一生中，至少有一两次我觉得有人用催眠术指挥我做了一些事',
-    292: '我一般不愿意同人讲话，除非对方先开口',
-    293: '有人一直想要左右我的思想',
-    294: '我从来没有犯过法',
-    295: '我喜欢看《红楼梦》这一类的小说',
-    296: '有些时候，我会无缘无故地觉得非常愉快',
-    297: '我希望我不再受那种和性方面有关的念头所困扰',
-    298: '假若有几个人闯了祸，他们最好先编一套假话，而且不改口',
-    299: '我认为我比大多数人更容易动感情',
-    300: '在我的一生当中，从来没有喜欢过洋娃娃',
-    301: '许多时候，生活对我来说是一件吃力的事',
-    302: '我从来没有因我的性方面的行为而遇到麻烦',
-    303: '对于某些事情我很敏感，以至使我不能提及',
-    304: '在学校里，要我在班上发言，是非常困难的',
-    305: '即使和人们在一起，我还是经常感到孤单',
-    306: '应得的同情，我全得到了',
-    307: '我拒绝玩那些我玩不好的游戏',
-    308: '有时我非常想离开家',
-    309: '我交朋友差不多和别人一样容易',
-    310: '我的性生活是满意的',
-    311: '我小的时候，有一段时间我干过小偷小摸的事',
-    312: '我不喜欢有人在我的身旁',
-    313: '有人不将自己的贵重物品保管好因而引起别人偷窃，这种人和小偷一样应受责备',
-    314: '偶尔我会想到一些坏得说不出口的事',
-    315: '我深信生活对我是不公平的',
-    316: '我想差不多每个人，都会为了避免麻烦说点假话',
-    317: '我比大多数人更敏感',
-    318: '在我的日常生活中，充满着使我感兴趣的事情',
-    319: '大多数人，都是内心不愿意挺身而出去帮助别人的',
-    320: '我的梦有好些是关于性方面的事',
-    321: '我很容易感到难为情',
-    322: '我为金钱和事业忧虑',
-    323: '我曾经有过很特殊很奇怪的体验',
-    324: '我从来没有爱上过任何人',
-    325: '我家里有些人所做的事，使我吃惊',
-    326: '有时我会哭一阵，笑一阵，连自己也不能控制',
-    327: '我的母亲或父亲时常要我服从他，即使我认为是不合理的',
-    328: '我发现我很难把注意力集中到一件工作上',
-    329: '我几乎从不做梦',
-    330: '我从来没有瘫痪过，或是感到肌肉非常软弱无力',
-    331: '假如不是有人和我作对，我一定会有更大的成就',
-    332: '即使我没有感冒，我有时也会发不出声音或声音改变',
-    333: '似乎没有人理解我',
-    334: '有时我会闻到奇怪的气味',
-    335: '我不能专心于一件事情上',
-    336: '我很容易对人感到不耐烦',
-    337: '我几乎整天都在为某件事或某个人而焦虑',
-    338: '我所操心的事，远远超过了我所应该操心的范围',
-    339: '大部分时间，我觉得我还是死了的好',
-    340: '有时我会兴奋得难以入睡',
-    341: '有时我的听觉太灵敏了，反而使我感到烦恼',
-    342: '别人对我说的话，我立刻就忘记了',
-    343: '哪怕是琐碎的小事，我也会再三考虑后才去做',
-    344: '有时为了避免和某些人相遇，我会绕道而行',
-    345: '我常常觉得好像一切都不是真的',
-    346: '我有一个习惯，喜欢点数一些不重要的东西，像路上的电线杆等等',
-    347: '我没有真正想伤害我的仇人',
-    348: '我提防那些对我过分亲近的人',
-    349: '我有一些奇怪和特别的念头',
-    350: '在我独处的时候，我会听到奇怪的声音',
-    351: '当我必须短期离家出门的时候，我会感到心神不定',
-    352: '我怕一些东西或人，虽然我明知他们是不会伤害我的',
-    353: '如果屋子里已经有人聚在一起谈话，这时要我一个人进去，我是一点也不害怕的',
-    354: '我害怕使用刀子或任何尖利的东西',
-    355: '有时我喜欢折磨我所爱的人',
-    356: '我似乎比别人更难于集中注意力',
-    357: '有好几次我放弃正在做的事，因为我感到自己的能力太差了',
-    358: '我脑子里常常出现一些坏的可怕的字眼，我却无法摆脱它们',
-    359: '有时一些无关紧要的念头缠着我，使我好多天都感到不安',
-    360: '几乎每天都有使我感到害怕的事情发生',
-    361: '我总是将事情看得严重些',
-    362: '我比大多数人更敏感。',
-    363: '有时我喜欢受到我心爱的人的折磨',
-    364: '有人用侮辱性的和下流的话议论我',
-    365: '我呆在屋里总感到不安',
-    366: '即使和人们在一起，我仍经常感到孤单',
-    367: '我并不是特别害羞拘谨',
-    368: '有时我的头脑似乎比平时迟钝',
-    369: '在社交场合，我多半是一个人坐着，或者只跟另一个人坐在一起，而不到人群里去',
-    370: '人们常使我失望',
-    371: '我喜欢参加舞会',
-    372: '有时我感到困难重重，无法克服',
-    373: '我常想：“我要是能再成为一个孩子就好了”',
-    374: '如果给我机会，我一定能做些对世界大有益处的事',
-    375: '我时常遇见一些所谓的专家，他们并不比我高明',
-    376: '当我听说我所熟悉的人成功了，我就觉得自己失败了',
-    377: '如果有机会，我一定能成为一个人民的好领袖',
-    378: '下流的故事使我感到不好意思',
-    379: '一般来说人们要求别人尊重自己比较多，而自己却很少尊重别人',
-    380: '我总想把好的故事记住，讲给别人听',
-    381: '我喜欢搞输赢不大的赌博',
-    382: '为了可以和人们在一起，我喜欢社交活动。',
-    383: '我喜欢人多热闹的场合',
-    384: '当我和一群快活的朋友在一起的时候，我的烦恼就烟消云散了',
-    385: '当人们说我同伙的闲话时，我从来不参与',
-    386: '只要我开始做一件事，就很难放下，哪怕是暂时的',
-    387: '我的小便不困难，也不难控制',
-    388: '我常发现别人妒忌我的好主意，因为他们没能先想到',
-    389: '只要有可能，我就会避开人群',
-    390: '我不怕见生人',
-    391: '记得我曾经为了逃避某件事而装过病',
-    392: '在火车和公共汽车上，我常跟陌生人交谈',
-    393: '当事情不顺利的时候，我就想立即放弃。',
-    394: '我喜欢让人家知道我对于事物的态度',
-    395: '有些时间，我感到劲头十足，以至一连好几天都不需要睡觉',
-    396: '在人群中，如果叫我带头发言，或对我所熟悉的事情发表意见，我并不感到不好意思',
-    397: '我喜欢聚会和社交活动',
-    398: '面对困难或危险的时候，我总退缩不前',
-    399: '我原来想做的事，假若别人认为不值得做，我很容易放弃',
-    400: '我不怕火',
-    401: '我不怕水',
-    402: '对某些事我常常是仔细考虑后才做出决定',
-    403: '生活在这个丰富多彩的时代里是多么美好',
-    404: '当我想纠正别人的错误和帮助他们的时候，我的好意常被误解',
-    405: '我无吞咽困难',
-    406: '我有时回避见人，因为我怕我会做出或讲出一些事后令我懊悔的事',
-    407: '我通常很镇静，不容易激动',
-    408: '我不轻易流露自己的感情，以至于人家伤害了我，他自己还不知道',
-    409: '有时我因为承担的事情太多，而使自己精疲力竭',
-    410: '我当然乐于以其人之道还治其人之身',
-    411: '宗教不使我烦恼',
-    412: '我生病或受伤的时候，不怕找医生',
-    413: '我有罪，应受重罚',
-    414: '我把失望的事看得太重，以至于总忘不了',
-    415: '我很不喜欢匆匆忙忙地干工作',
-    416: '虽然我明知自己能把事做好，但是我也怕别人看着我做',
-    417: '在排队的时候如果有人插到我前面去，我会感到恼火而指责他',
-    418: '有时我觉得自己一无是处',
-    419: '小时候我时常逃学',
-    420: '我曾经有过很不寻常的宗教体验',
-    421: '我家里有人很神经过敏',
-    422: '我因为家里有的人所从事过的职业而感到不好意思',
-    423: '我很喜欢（或者喜欢过）钓鱼',
-    424: '我几乎总感到肚子饿',
-    425: '我经常做梦',
-    426: '有时只好用不客气的态度去对付那些粗鲁或令人厌恶的人',
-    427: '我倾向于对各种不同爱好发生兴趣，而不愿意长期坚持其中的某一种',
-    428: '我喜欢阅读报纸的社论',
-    429: '我喜欢听主题严肃的演说',
-    430: '我易受异性的吸引',
-    431: '我相当担心那些可能发生的不幸',
-    432: '我有着坚定的政治见解',
-    433: '我曾经有过想像的同伴',
-    434: '我希望能成为一个摩托车运动员',
-    435: '我通常喜欢和女性一起工作',
-    436: '我确信只有一种宗教是真的',
-    437: '只要你不是真正地犯法，钻法律的空子是可以的',
-    438: '有些人讨厌极了，我会因为他们自食其果而暗中高兴',
-    439: '要我等待，我就紧张',
-    440: '当我兴高采烈的时候，见到别人忧郁消沉就使我大为扫兴',
-    441: '我喜欢身材高的女人',
-    442: '有些时期我因忧虑而失眠',
-    443: '假若别人认为我对某些事的做法不妥当的话，我很容易放弃',
-    444: '我不想去纠正那些发表愚昧无知见解的人',
-    445: '我年轻（童年）的时候，喜欢寻求刺激',
-    446: '警察通常是诚实的',
-    447: '当别人反对我的意见时，我会不惜一切去说服他',
-    448: '在街上、车上或在商店里，如果有人注视我，我会觉得不安',
-    449: '我不喜欢看到妇女吸烟',
-    450: '我很少有忧郁的毛病',
-    451: '如果有人对我所熟悉的事情发表愚蠢和无知的意见，我总是没法纠正他',
-    452: '我喜欢开别人的玩笑',
-    453: '我小时候，对参加团伙不热心',
-    454: '独自住在深山或老林的小木屋里，我也会觉得快乐',
-    455: '许多人都说我是急性子',
-    456: '如果一个人触犯了一条他认为不合理的法律，他是不应该受到惩罚的',
-    457: '我认为一个人决不应该喝酒',
-    458: '小时候和我关系密切的人（父亲、继父等）对我十分严厉',
-    459: '我有几种坏习惯，已经根深蒂固，难于改正',
-    460: '我只适量地喝一点酒（或者一点也不喝）',
-    461: '我希望我能摆脱因为破口伤人而引起的烦恼',
-    462: '我觉得不能把自己的一切都告诉别人',
-    463: '我从前喜欢玩“跳房子”（或跳橡皮筋）的游戏',
-    464: '我从来没有见过幻象',
-    465: '对于我的终身职业，我已经好几次改变过主意',
-    466: '除了医生的嘱咐，我从来不服用任何药物或安眠药',
-    467: '我时常默记一些无关紧要的号码（如汽车牌照等）',
-    468: '我时常因为自己爱发脾气和爱抱怨而感到懊悔',
-    469: '闪电是我害怕的东西中的一种',
-    470: '有关性方面的事使我厌恶',
-    471: '在学校中老师对我的品行评定总是很不好',
-    472: '火对我有一种诱惑力。',
-    473: '我喜欢让别人猜测我下一步的活动',
-    474: '我的小便次数不比别人多',
-    475: '万不得已的时候，我只吐露一些无损于自己的那部分实情',
-    476: '我是上帝（神）派来的特使',
-    477: '假如我和几个朋友有着同样的过错，我宁可一人承担而不愿连累别人',
-    478: '我还从来没有因为家里人惹了事而自己感到特别紧张',
-    479: '人与人之间的相互欺骗是我所知道的唯一的奇迹',
-    480: '我常常怕黑暗',
-    481: '我害怕一个人单独呆在黑暗中',
-    482: '我的计划看来总是困难重重，使我不得不一一放弃',
-    483: '上帝（神）创造奇迹',
-    484: '有些缺点，我只好承认并设法加以控制，但无法消除',
-    485: '一个男人和一个女人相处的时候，他通常想到的是关于她的性方面的事',
-    486: '我从来没有发现我尿中有血',
-    487: '当我试图使别人不犯错误，而做的事被人误解的时候，我往往感到十分难过',
-    488: '每星期我祈祷几次',
-    489: '我同情那些不能摆脱苦恼和忧愁的人',
-    490: '我每星期念几次经',
-    491: '对认为世界上只有一种宗教是真的那些人，我感到不耐烦',
-    492: '我想起地震就害怕',
-    493: '我喜欢那种需要注意力集中的工作，而不喜欢省心（不费劲）的工作',
-    494: '我怕自己被关在小房间里或禁闭的小地方',
-    495: '对那些我想帮助他们改正或提高的人，我总是坦率地交底',
-    496: '我从来没有过将一件东西看成两件（复视现象）',
-    497: '我喜欢探险小说',
-    498: '坦率永远是一件好事',
-    499: '我必须承认，我有时会不合理地担心一些无关紧要的事情',
-    500: '我很乐意百分之百的接受一个好意见',
-    501: '我一向总是靠自己解决问题，而不是找人教我怎样做',
-    502: '风暴使我惊慌',
-    503: '我经常不对别人的行动表示强烈的赞成或反对',
-    504: '我不想隐瞒我对一个人的坏印象或同情，免得他不知道我对他的看法',
-    505: '我认为“不肯拉车的马应该受到鞭打”',
-    506: '我是个神经高度紧张的人',
-    507: '我经常遇到一些顶头上司，他们把功劳归于自己，把错误推给下级',
-    508: '我相信我的嗅觉和别人一样好',
-    509: '因为我太拘谨，所以有时我难于坚持自己的正确意见',
-    510: '肮脏使我害怕或恶心',
-    511: '我有一种不愿告诉别人的梦幻生活',
-    512: '我不喜欢洗澡',
-    513: '我认为为别人谋求幸福比自己争取自由更为伟大',
-    514: '我喜欢有男子气的女人',
-    515: '我们家总是不愁吃不愁穿',
-    516: '我家里有些人脾气急躁',
-    517: '我无论什么事情都做不好',
-    518: '我经常感到惭愧，因为我对某些事情想的和做的不一样',
-    519: '我的性器官有点毛病',
-    520: '我总是强烈地坚持自己的意见',
-    521: '我常常向别人请教',
-    522: '我不害怕蜘蛛',
-    523: '我从来不脸红',
-    524: '我不怕从门把上传染上疾病',
-    525: '有些动物使我神经紧张',
-    526: '我的前途似乎没有希望',
-    527: '我家里人和近亲们相处得很好',
-    528: '我并不容易比人脸红',
-    529: '我喜欢穿高档的衣服',
-    530: '我常常担心自己会脸红',
-    531: '即使我以为自己对某种事已经打定了主意，别人也很容易使我变卦或改变主意',
-    532: '我和别人一样能够忍受同量的痛苦',
-    533: '我并不因为常常打嗝（呃逆）而觉得很烦恼',
-    534: '有好几次都是我一个人坚持到底，最后才放弃了所做的事',
-    535: '我几乎整天感到口干',
-    536: '只要有人催我，我就生气',
-    537: '我想去深山野林中打老虎',
-    538: '我想我会喜欢裁缝的工作',
-    539: '我不怕老鼠',
-    540: '我的面部从来没有麻痹过',
-    541: '我的皮肤似乎对触摸特别敏感',
-    542: '我从来没有过像柏油一样的黑粪便',
-    543: '每星期我总有几次觉得好像有可怕的事情要发生',
-    544: '我大部分时间都感到疲倦',
-    545: '有时我一再做同样的梦',
-    546: '我喜欢阅读有关历史的书籍',
-    547: '未来是变化无常的，一个人很难做出认真的安排',
-    548: '如果可以避免的话，我决不去看色情电影',
-    549: '许多时候，即使一切顺利，我对任何事情都觉得无所谓',
-    550: '我喜欢修理门锁',
-    551: '有时我可以肯定别人知道我在想什么',
-    552: '我喜欢阅读有关科学的书籍',
-    553: '我害怕单独呆在空旷的地方',
-    554: '假如我是个画家，我喜欢画小孩子',
-    555: '有时我觉得我就要垮了',
-    556: '我很注意我的衣着式样',
-    557: '我喜欢当一个私人秘书',
-    558: '许多人都因为有过不良的性行为而感到惭愧',
-    559: '我经常在半夜里受惊吓',
-    560: '我经常因为记不清把东西放在哪里而感到苦恼',
-    561: '我很喜欢骑马',
-    562: '小时候，我最依恋和钦佩的是一个女人（祖母、母亲、姐姐、姑、婶、姨等）',
-    563: '我喜欢探险小说胜过爱情小说',
-    564: '我不轻易生气',
-    565: '当我站在高处的时候，我就很想往下跳',
-    566: '我喜欢电影里的爱情镜头'
+ 1: Teknik yazılardan hoşlanırım
+2: İştahım iyidir
+3: Çok defa sabahları dinç ve dinlenmiş olarak uyanırım
+4: Kütüphaneci olarak çalışmayı seveceğimi sanıyorum
+5: Gürültüden kolayca uyanırım
+6: Cinayet haberlerini okumaktan hoşlanırım
+7: Çoğu zaman el ve ayaklarımın sıcaklığı iyidir
+8: Günlük hayatım beni ilgilendirecek şeylerle doludur
+9: Bugün de hemen hemen eskisi kadar iyi çalışabiliyorum
+10: Çoğu zaman boğazım tıkanır gibi olur
+11: İnsan rüyalarını anlamaya çalışmalı ve kendini onlara göre ayarlamalıdır
+12: Polis romanlarından ya da esrarengiz romanlardan hoşlanırım
+13: Büyük bir sinir gerginliği içinde çalışırım
+14: Ayda bir iki defa ishal olurum
+15: Ara sıra söylenemeyecek kadar ayıp şeyler düşünürüm
+16: Hayatta kötülükler hep beni bulur
+17: Babam iyi bir adamdır
+18: Pek seyrek kabız olurum
+19: Yeni bir işe girince kimin gözüne girme gerektiğini öğrenmek isterim
+20: Cinsel yaşamımdan memnunum
+21: Zaman zaman evi bırakıp gitmek istemişimdir
+22: Ara sıra kontrol edemediğim gülme ve ağlama nöbetlerine tutulurum
+23: Tekrarlanan mide bulantısı ve kusmalar bana sıkıntı verir
+24: Kimse beni anlamıyor
+25: Şarkici olmayı isterim
+26: Başım derde girince susmayı tercih ederim
+27: Bazen kötü ruhların beni etkileri altına aldıklarını hissederim
+28: Kötülüğe kötülükle karşılık vermem prensibimdir
+29: Çoğu kez midem ekşir
+30: Bazen canim küfretmek ister
+31: Sık sık geceleri kabus geçiririm
+32: Zihnimi bir iş üzerinde toplamada güçlük çekerim
+33: Başımdan çok garip ve tuhaf şeyler geçti
+34: Çoğu zaman öksürüğüm vardır
+35: Başkaları engel olmasaydı daha çok başarılı olurdum
+36: Sağlığım beni pek kaygılandırmaz
+37: Cinsel yaşamım yüzünden başım hiç derde girmedi
+38: Gençliğimde bir devre ufak tefek şeyler çaldım
+39: Bazen içimde bir şeyler kırmak isteği geçer
+40: Başka bir şey yapmaktansa çoğu zaman oturup hayal kurmayı severim
+41: Kendimi toparlayamadığım için günler, haftalar, hatta aylarca hiçbir şeye el sürmediğim olur
+42: Ailem seçtiğim veya seçmek istediğim mesleği beğenmiyor
+43: Kuşkulu ve rahatsız uyurum
+44: Çoğu zaman başımın her tarafı ağrır
+45: Her zaman doğruyu söylemem
+46: Şimdi her zamankinden daha iyi düşünüp tartabiliyorum
+47: Ortada hiç bir neden yokken haftada bir ya da daha sık birdenbire her yanımı ateş basar
+48: Başkaları ile bir arada iken kulağıma çok garip şeyler gelmesinden rahatsız olurum
+49: Kanunların hemen hepsi kaldırılsa daha iyi olur
+50: Bazen ruhum vücudumdan ayrılır
+51: Sağlığım bir çok arkadaşımınki kadar iyidir
+52: Uzun zamandan beri görmediğim okul arkadaşlarım ya da tanıdıklarım önce benimle konuşmazlarsa onları görmemezlikten gelmeyi tercih ederim
+53: Hocaların dua okuyup üflemesi hastalığı iyileştirir
+54: Tanıdıklarımın çoğu beni sever
+55: Kalp ve göğüs ağrılarından hemen hemen hiç şikayetim yoktur
+56: Çocukken okuldan kaçtığım için bir iki defa cezalandırıldım
+57: İnsanlarla çabucak kaynaşırım
+58: Kuran' ın buyurdukları bir bir çıkmaktadır
+59: Çok defa benden az bilenlerden emir alarak çalışmak zorunda kaldım
+60: Her gün gazetelerin baş yazılarını okumam
+61: Gerektiği gibi bir hayat yaşayamadım
+62: Vücudumun bazı yerlerinde çok defa yanma, gıdıklanma, karıncalanma veya uyuşukluk hissederim
+63: Büyük abdest yapmada ya da tutmada hiç bir güçlük çekmem
+64: Bazen başkalarının sabrını tüketecek kadar bir şeye saplanır kalırım
+65: Babamı severim
+66: Etrafımda başkalarının görmediği eşya, hayvanlar veya insanlar görürüm
+67: Başkalarının mutlu göründüğü kadar mutlu olmayı isterdim
+68: Ensemde nadiren ağrı hissederim
+69: Kendi cinsimden olanları oldukça çekici bulurum
+70: Körebe oyunundan hoşlanırdım
+71: Birçok kimseler başkalarının ilgi ve yardımlarını sağlamak için talihsizliklerini abartırlar
+72: Hemen hemen her gün mide ağrılarından rahatsız olurum
+73: Ben önemli bir kimseyim
+74: Çoğu zaman kız olmayı isterdim (Şayet kız iseniz:) Kız olduğuma hiç üzülmedim
+75: Ara sıra öfkelenirim
+76: Çoğu zaman kendimi hüzünlü hissederim
+77: Aşk romanları okumaktan hoşlanırım
+78: Şiiri severim
+79: Kolay incinmem
+80: Bazen hayvanlara rahat vermem
+81: Orman bekçiliği gibi işlerden hoşlanacağımı sanıyorum
+82: Tartışmalarda çabucak yenilirim
+83: Çok çalışabilen ya da çalışmak isteyen kişinin başarılı olma şansı yüksektir
+84: Bugünlerde artık hiç ilerleme umudum kalmamış gibi hissediyorum
+85: Kullanmayacak bile olsam bazen başkalarının ayakkabı, eldiven gibi özel eşyaları o kadar hoşuma gider ki dokunmak ve aşırmak isterim
+86: Kendime hiç güvenim yoktur
+87: Çiçek satıcısı olmayı isterdim
+88: Genel olarak hayatın yaşanmaya değer olduğu kanısındayım
+89: İnsanlara gerçeği kabul ettirmek güçtür
+90: Bugün yapmam gereken işleri ara sıra yarına bıraktığım olur
+91: Benimle alay edilmesine aldırmam
+92: Hemşire olmayı isterdim
+93: Yükselmek için bir çok kimse yalan söylemekten çekinmez
+94: Sonradan pişman olacağım pek çok şeyi yaptığım olur
+95: Namazımı hemen hemen muntazaman kılarım
+96: Ailemle pek az kavga ederim
+97: Bazen zararlı yada çok kötü işler yapmam için içimde çok güçlü bir istek duyarım
+98: Kıyamet gününe inanıyorum
+99: Gürültülü eğlencelere katılmaktan hoşlanırım
+100: Bildiğim bir konuda bir kimse saçma sapan ya da cahilce konuşursa onu hemen düzeltirim
+101: Bence cinsel yönden kadınlar da erkekler kadar serbest olmalıdır,
+102: En büyük mücadelemi kendimle yaparım
+103: Vücudumda pek az seğirme ve kasılma olur
+104: Başıma ne gelirse gelsin aldırış etmiyorum
+105: Keyfim yerinde olmadığı zaman tersliğim üzerimdedir
+106: Çoğu zaman büyük bir hata ya da kötülük yaptığım korkusuna kapılırım
+107: Çoğu zaman mutluyumdur
+108: Çoğu zaman bana kafam şişmiş ya da burnum tıkanmış gibi gelir
+109: Bazı kimseler o kadar amirane davranırlar ki haklı bile olsalar içimden dediklerinin aksini yapmak gelir
+110: Bana kötülük etmek isteyen biri var
+111: Sırf heyecanlanmak için tehlikeli bir işe girişmedim
+112: Doğru bildiğim şeyler için çoğu zaman direnmek zorunda kalırım
+113: Kanunların uygulanması gerektiğine inanırım
+114: Çoğu zaman başım sıkı bir çember içindeymiş gibi hissederim
+115: Ahirete inanırım
+116: Bahse girdiğim yarış ya da oyunlardan daha çok zevk alırım
+117: Bir çok kimseler daha çok yakalanmaktan korktukları için dürüsttürler
+118: Dersten kaçtığım için ara sıra müdüre gönderildiğim oldu
+119: Konuşma tarzım her zamanki gibidir (Daha yavaş ya da hızlı değil, yayvanlaşmış ya da kısık değil)
+120: Evde sofra adabına dışarıdaki kadar dikkat etmem
+121: Aleyhimde bazı tertipler kurulduğuna inanıyorum
+122: Tanıdığım insanların çoğu kadar becerikli ve zeki olduğuma sanıyorum
+123: Beni takip edenler olduğuna inanıyorum
+124: Bir çokları kaybetmektense çıkarlarını korumak için pek doğru olmayan yollara başvururlar
+125: Midemden oldukça rahatsızım
+126: Tiyatrodan hoşlanırım
+127: Dertlerimin çoğundan kimin sorumlu olduğunu biliyorum
+128: Kan görünce korkmam ya da fenalaşmam
+129: Bazen ters ve suratsız olurum
+130: Hiç bir zaman kan kusmadım ya da kan tükürmedim
+131: Hastalığa yakalanacağım diye kaygılanmam
+132: Çiçek koleksiyonu yapmayı ve evde çiçek yetiştirmeyi severim
+133: Hiç bir zaman normal olmayan cinsel ilişkilere girişmedim
+134: Bazen kafamdaki düşünceler o kadar hızlıdır ki söylemeyi yetiştiremem
+135: Fark edilmeyeceğimden emin olsam sinemaya biletsiz girerdim
+136: Bana iyilik yapan kimsenin genel olarak gizli bir amacı olabileceğini düşünürüm
+137: Aile hayatımın tanıdığım kimselerin çoğununki kadar iyi olduğuna inanıyorum
+138: Eleştiri beni çok kırar
+139: Bazen sanki kendimi ya da başkasını incitmek zorundaymışım gibi hissederim
+140: Yemek pişirmeyi severim
+141: Davranışlarımı çoğu zaman etrafımdakilere göre ayarlarım
+142: Bazen hiçbir işe yaramadığımı düşünürüm
+143: Çocukken başlarına ne gelirse gelsin aralarındaki birliği koruyan bir gruptaydım
+144: Asker olmak isterim
+145: Bazen biriyle yumruk yumruğa kavgaya girişmek istediğim olur
+146: Seyahat edip gezip tozmadıkça mutlu olmam
+147: Çabuk karar vermediğim için çok fırsat kaçırdım
+148: Önemli bir iş üzerinde çalışırken başkalarının işimi yarıda kesmeleri sabrımı taşırır
+149: Hatıra defteri tutardım
+150: Oyunda kaybetmektense kazanmayı isterim
+151: Biri beni zehirlemeye çalışıyor
+152: Çoğu geceler zihnimi hiçbir şey kurcalamadan uykuya dalarım
+153: Son birkaç yıl içinde sağlığım çoğu zaman iyiydi
+154: Hiç sinir nöbeti ya da havale geçirmedim
+155: Ne şişmanlıyorum ne de zayıflıyorum
+156: Bir şeyler yapıp sonra ne yaptığımı hatırlayamadığım zamanlar oldu
+157: Çoğu kez sebepsiz yere cezalandırıldım
+158: Çabuk ağlarım
+159: ŸOkuduğumu eskisi kadar iyi anlayamıyorum
+160: Hayatımda hiç bir zaman kendimi şimdiki kadar iyi hissetmedim
+161: Bazen başımda bir sizi hissederim
+162: Birisinin bana kurnazca oyun etmesine çok içerlerim
+163: Çabucak yorulmam
+164: Üzerinde çalıştığım konularda okumayı ve incelemelerde bulunmayı severim
+165: Önemli kimseleri tanımayı severim, çünkü böylece kendimi de önemli bir kimse gibi görürüm
+166: Yüksek bir yerden aşağıya bakmaya korkarım
+167: Ailemden herhangi birinin mahkemelik olması beni rahatsız etmez
+168: Zihnimde bir gariplik var
+169: Parayı ellemekten korkmam
+170: Başkalarının hakkımda ne düşündükleri beni rahatsız etmez
+171: Bir eğlencede başkaları yapsalar bile, ben taşkınlık yapmaktan rahatsız olurum
+172: Çoğu kez utangaçlığımı örtbas etmek ihtiyacını duyarım
+173: Okulu severdim
+174: Hiç bayılma nöbeti geçirmedim
+175: Pek az başım döner ya da hiç dönmez
+176: Yılandan büyük bir korkum yoktur
+177: Annem iyi bir kadındır
+178: Hafızam genellikle iyidir
+179: Cinsel konularda sıkıntım vardır
+180: Yeni tanıştığım kimselerle konuşma konusu bulmada güçlük çekerim
+181: Canım sıkıldıkça heyecan yaratmayı severim
+182: Aklımı oynatmaktan korkuyorum
+183: Dilencilere para vermeyi doğru bulmam
+184: Sık sık nereden geldiğini bilmediğim sesler duyarım
+185: Herkes kadar iyi işitirim
+186: Bir şeyler yapmağa girişince ellerimin çok defa titrediğini fark ederim
+187: Ellerimde beceriksizlik ya da sakarlık yok
+188: Gözlerim yorulmadan uzun süre okuyabilirim
+189: Çoğu zaman bütün vücudumda bir halsizlik duyarım
+190: Başım pek az ağrır
+191: Bazen utanınca çok terlerim
+192: Yürürken dengemi hemen hemen hiç kaybetmem
+193: Saman nezlesi ya da astım nöbetlerim yoktur
+194: Hareketlerimi ve konuşmamı kontrol edemediğim fakat etrafımda olup bitenden haberdar olduğum nöbetler geçirdiğim oldu
+195: Tanıdığım herkesi sevmem
+196: Hiç görmediğim yerlere gitmekten hoşlanırım
+197: Biri beni soymaya her şeyimi almaya çalışıyor
+198: Çok az hayal kurarım
+199: Çocuklara cinsiyetle ilgili temel gerçekler öğretilmelidir
+200: Fikir ve düşüncelerimi çalmak isteyen biri var
+201: Keşke bu kadar utangaç olmasam
+202: Kendimi cezayı hak etmiş suçlu bir insan olarak görüyorum
+203: Gazeteci olmak isterdim
+204: Gazeteci olmasaydım daha çok tiyatro haberleri yazmaktan hoşlanırdım
+205: Bazen çalmaktan ya da dükkanlardan eşya aşırmaktan kendimi alamam
+206: Bir çok kimseden daha dindarımdır
+207: Çeşitli oyun ve eğlencelerden hoşlanırım
+208: Flört etmeyi severim
+209: Günahlarımın affedilmeyeceğine inanıyorum
+210: Her şeyin tanı aynı geliyor
+211: Gündüzleri uyuyabilirim fakat gündüzleri uyuyamam
+212: Evdekiler bana çocuk muamelesi yapıyor
+213: Yürürken kaldırımdaki yarıklara basmamaya dikkat ederim
+214: Cildimde üzülmeye değer kabarıklık ya da sivilce yok
+215: Çok içki kullandım
+216: Başka ailelere göre bizim evde sevgi ve arkadaşlık pek azdır
+217: Sık sık kendime bir şeyleri dert edinirim
+218: Hayvanların eziyet çektiğini görmek beni üzmez
+219: İnşaat mütahitliğinden hoşlanacağımı sanıyorum
+220: Annemi çok severim
+221: Bilimden hoşlanırım
+222: Karşılığını veremeyeceğim durumlarda bile arkadaşlarımdan yardım istemekte güçlük çekmem
+223: Avlanmayı çok severim
+224: Annem babam hep beraber olduğum kimselerden çok defa hoşlanmıyorlar
+225: Bazen biraz dedikodu yaptığım olur
+226: Ailemdeki bazı kimselerde canımı çok sıkan alışkanlıklar var
+227: Uykuda gezdiğimi söylerler
+228: Bazen alışılmamış bir kolaylıkla karar verebileceğimi hissediyorum
+229: Çeşitli klüp ve derneklere üye olmak isterim
+230: Kalbimin hızlı çarptığını hemen hemen hiç hissetmem ve çok seyrek nefesim tıkanır
+231: Cinsiyet hakkında konuşmayı severim
+232: Bazen üzerime çok fazla iş alırım
+233: Pek çok insan karşı çıksa da kendi fikrimi sonuna kadar savunurum
+234: Çabuk kızar ve çabuk unuturum
+235: Aile kurallarından oldukça bağımsız ve özgürüm
+236: Sıklıkla kara kara düşünürüm
+237: Akrabalarımın hemen hepsi bana karşı anlayış gösterir
+238: Zaman zaman perimde duramayacak huzursuzluk duyduğum devreler olur
+239: Aşkta hayal kırıklığına uğradım
+240: Görünüşüme hiç aldırmam
+241: Kendi içimde tutup başkalarına söylenemeyen şeyler hakkında sık sık rüya görürüm
+242: Bir çoklarından daha sinirli sayılmam
+243: Hemen hemen hiç bir ağrı ve sızım yok
+244: Davranışlarım başkalarınca yanlış anlaşılmaya elverişlidir
+245: Ailem beni olduğumdan daha hatalı bulur
+246: Boynumda sık sık kırmızı lekeler olur
+247: Kimseden sevgi görmüyorum
+248: Bazen ortada hiç bir neden yokken hatta işler kötüye gittiği zaman bile kendimi fazlasıyla mutlu hissederim
+249: Öbür dünyada şeytan ve cehennem olduğuna inanırım
+250: Hayatta önüne her geleni kapmağa çalışan insanları suçlamam
+251: Kendimi kaybedip yaptığım işi aksattığım ve etrafımda olup bitenlerin farkında olmadığım zamanlar oldu
+252: Hiç kimse başkasının derdine aldırış etmiyor
+253: Hatalı davranışlarını görsem bile insanlara arkadaşça davranabilirim
+254: Birbiriyle şakalaşan kimseler arasında olmayı severim
+255: Seçimlerde bazen oyumu pek az tanıdığım kimselere veririm
+256: Gazetelerin ilgi çeken tek yeri resimli mizah sayfasıdır
+257: Yaptığım işlerde genel olarak başarı elde edeceğime inanırım
+258: Allah’ın varlığına inanırım
+259: İşe başlamada güçlük çekerim
+260: øOkulda iken ağır öğrenenlerden biri idim
+261: Ressam olsaydım çiçek resimleri yapardım
+262: Daha güzel olmamam beni rahatsız etmez
+263: Soğuk günlerde bile kolayca terlerim
+264: Kendime tam anlamıyla güvenim vardır
+265: Hiç kimseye güvenmemek en doğrusudur
+266: Haftada bir ya da sık, çok heyecanlanırım
+267: Topluluk içinde olduğumda üzerinde konuşacak uygun konular bulmada güçlük çekerim
+268: Karamsar olduğum zaman heyecanlı bir olay hemen beni bu durumdan çıkarır
+269: Bazen zevk için başkalarını kendimden korkuturum
+270: Evden çıkarken kapının kilitli ve pencerenin kapalı olup olmadığı aklıma takılmaz
+271: Başkalarının saflığını kendi çıkarlarında kullanan kimseleri ayıplamam
+272: Bazen kendimi enerji dolu hissederim
+273: Derimin bazı yerlerinde uyuşukluk hissederim
+274: Görme gücüm eskisi kadar kuvvetlidir
+275: Birisi zihnimi kontrol ediyor
+276: Çocukları severim
+277: Bazen bir madrabazın kurnazlığı beni o kadar eğlendirir ki, yakayı ele vermemesini dilerim
+278: Çok defa tanımadığım kimselerin bana eleştirici gözle baktıklarını hissederim
+279: Her gün gereğinden fazla su içerim
+280: Bir çok kimseler kendilerine yararı dokunacağı için arkadaş edinirler
+281: Kulaklarım çok az çınlar ya da uğuldar
+282: Genellikle sevdiğim aile üyelerine karşı bazen nefret duyarım
+283: Gazete muhabiri olsaydım en çok spor haberleri yazmayı isterdim
+284: Hakkımda çok konuşulduğumdan eminim
+285: Ara sıra açık saçık bir fıkraya güldüğüm olur
+286: En çok yalnız olduğum zaman mutlu olurum
+287: Arkadaşlarıma kıyasla beni korkutan şeyler çok azdır
+288: Tekrarlanan mide bulantısı ve kusmalar bana sıkıntı verir
+289: Bir suçlu avukatının becerikliliği sayesinde cezadan kurtulunca kanunlara karşı daima nefret duyarım
+290: Çok gergin bir hava içinde çalışıyorum
+291: Hayatımda bir ya da birkaç kere birisinin beni hipnotize ederek bana bir şeyler yaptığını hissettim
+292: Başkaları benimle konuşuncaya kadar ben onlarla konuşmaya başlamam
+293: Birisi zihnimi etkilemeye çalışıyor
+294: Kanunla hiç başım derde girmedi
+295: Masal okumayı severim
+296: Hiçbir neden yokken kendimi son derecede neşeli hissettiğim zamanlar olur
+297: Cinsiyetle ilgili düşünceler beni rahatsız eder
+298: Birkaç kişinin birlikte başları derde girince en iyisi yakalarını kurtarmak için aynı hikayeyi uydurmak ve bundan caymamaktır
+299: Duygularımın birçok kimselerden yoğun olduğunu düşünürüm
+300: Hayatımda hiçbir zaman bebek oynamaktan hoşlanmadım
+301: Çoğu zaman hayat benim için bir yüktür
+302: Cinsel davranışlarımdan dolayı hiçbir zaman başım derde girmedi
+303: Bazı konularda o kadar alınganım ki onlar hakkında konuşmam bile
+304: Okulda sınıf karşısında konuşma bana çok güç gelirdi
+305: Başkalarıyla beraber olduğum zaman bile kendimi yalnız hissederim
+306: Bana karşı mümkün olan anlayış gösteriliyor
+307: İyi beceremediğim oyunları oynamağa yanaşmam
+308: Zaman zaman evi bırakıp gitmeyi çok istemişimdir
+309: Birçokları kadar çabuk arkadaş edinebildiğimi sanıyorum
+310: Cinsel hayatım doyurucudur
+311: Gençlik yıllarımda bir devre ufak tefek şeyler çaldım
+312: İnsanların arasında olmaktan hiç hoşlanmam
+313: Değerli eşyasını tedbirsizce ortada bırakıp çalınmasına neden olan kimse bunu çalan kadar hatalıdır
+314: Ara sıra söylenemeyecek kadar kötü şeyler düşünürüm
+315: Hayatın hep kötü tarafları bana nasip olmuştur
+316: Hemen hemen herkesin başını derde sokmamak için yalan söyleyebileceğine inanırım
+317: Birçok kimselerden daha hassasım
+318: Günlük hayatım beni ilgilendiren şeylerle dolu
+319: İnsanların çoğu başkalarına yardım etmek için zahmete girmekten hoşlanmazlar
+320: Rüyalarımın çoğu cinsel konularla ilgilidir
+321: Kolaylıkla mahcup olurum
+322: Para ve işi kendime dert edinirim
+323: Başımdan çok tuhaf ve acayip olaylar geçmiştir
+324: Hiç kimseye aşık olmadım
+325: Ailemin yaptığı bazı şeyler beni korkutmuştur
+326: Bazen kontrol edemediğim gülme ve ağlama nöbetlerine tutulurum
+327: Annem ya da babam çok defa beni makul bulmadığım emirlere bile itaat ettirdiler
+328: Zihnimi bir konu ya da iş üzerinde toplamakta güçlük çekerim
+329: Hemen hemen hiç rüya görmedim
+330: Hiç felç geçirmedim ya da kaslarımda olağan üstü bir halsizlik duymadım
+331: Eğer insanlar sırf düşmanlık olsun diye beni engellemeselerdi daha başarılı olurdum
+332: Bazen nezle olmadığım halde sesim çıkmaz ya da değişir
+333: Beni hiç kimse anlamıyor
+334: Bazen tuhaf korkular duyarım
+335: Zihnimi bir konu üzerinde toplayamam
+336: İnsanlara karşı sabrım çabuk tükenir
+337: Çoğunlukla bir takım şeyler ve kimseler için meraklanıp huzursuzlaşırım
+338: Hayatımın çoğu kimselerinkinden daha fazla tasa ve kaygı içinde geçtiğine eminim
+339: Çoğu zaman ölmüş olmayı isterdim
+340: Bazen o kadar heyecanlanırım ki uykuya dalmam güçleşir
+341: Bazen beni rahatsız edecek kadar iyi işitirim
+342: Bana söyleneni hemen unuturum
+343: Önemsiz ufak şeylerde bile karar verip işe girişmeden önce durur ve düşünürüm
+344: Gördüğüm kimse ile karşılaşmamak için sıklıkla yolumu değiştiririm
+345: Sıklıkla olup bitenler bana gerçek değilmiş gibi gelir
+346: Reklamlardaki ampuller gibi önemsiz şeyleri sayma alışkanlığım vardır
+347: Bana gerçekten kötülük yapmak isteyen hiç bir düşmanım yoktur
+348: Bana umduğumdan fazla dostluk gösteren insanlara karşı tetikte bulunmağa çalışırım
+349: Acayip ve tuhaf düşüncelerim vardır
+350: Yalnızken garip şeyler duyarım
+351: Küçük bir seyahat için bile evden ayrılırken telaşlanır ve kaygılanırım
+352: Beni incitmeyeceğini bildiğim şeylerden ya da insanlardan bile korktuğum oldu
+353: Başkalarının daha önce toplanıp konuştuğu odaya girmekten çekinmem
+354: Bıçak gibi çok keskin ve sivri şeyler kullanmaktan korkarım
+355: Sevdiğim kimseleri bazen incitmekten hoşlanırım
+356: Dikkatimi bir konu üzerinde toplamada birçok kişiden daha fazla güçlük çekerim
+357: Yeteneğimi küçümsediğim için birçok defalar başladığım işi yarıda bıraktım
+358: Kötü ve çok defa korkunç kelimeler zihnimi kurcalar ve bunlardan kendimi kurtaramam
+359: Bazen önemsiz düşünceler aklımdan geçer ve beni günlerce rahatsız eder
+360: Hemen hemen her gün beni korkutan bir şey olur
+361: Her şeyi kötüye yorma eğilimindeyim
+362: Birçok kimselerden daha çok hassasım
+363: Bazen sevdiğim kimselerin beni incitmesinden hoşlandığım oldu
+364: Hakkımda onur kırıcı ve kötü sözler söylüyorlar
+365: Kapalı yerlerde huzursuzluk duyarım
+366: İnsanlar içinde bile olsam çok defa kendimi yalnız hissederim
+367: Yangından korkmam
+368: Sonradan pişman olacağım şeyler yapmak ya da söylemek korkusuyla bazen bir kimseden uzak durduğum oldu
+369: Kararsızlığım yüzünden yapılması gerekli birçok işi yapamamışımdır
+370: Çalışırken acele etmek zorunda olmaktan nefret ederim
+371: Aşırı derecede kendini dinleyen bir insan değilim
+372: Elimdeki işi en iyi şekilde yapmayı isterim
+373: Yalnızca bir tek doğru din olduğundan eminim
+374: Ara sıra zihnim her zamankinden daha ağır işler
+375: Çok mutlu olduğum ve iyi çalıştığım zamanlarda neşesiz veya dertli bir insanla karşılaşmak keyfimi tamamen kaçırır
+376: Polisler genellikle dürüsttür
+377: Toplantılarda kalabalığa karışmaktan çok yalnız başıma oturur ya da bir tek kişiyle ahbaplık ederim
+378: Kadınları sigara içerken görmekten hoşlanmam
+379: Çok nadiren karamsarlığa kapılırım
+380: Ne yapsam zevk alamıyorum
+381: Kolay öfkelenen biri olduğumu söylerler
+382: Yapmak istediğim şeylere karar verirken, başkalarının ne düşüneceğini dikkate almam
+383: İnsanlar çoğu zaman beni hayal kırıklığına uğratırlar
+384: Kendimle ilgili her şeyi anlatabileceğim hiç kimse yok
+385: Şimşek çakması da korkularımdan biridir
+386: Çok tertipli ve titizim
+387: Ailem her davranışıma fazla karışıyor
+388: Karanlıkta yalnız kalmaktan korkarım
+389: Tasarlamış olduğum planlar çok defa o kadar güçlükle dolu göründü ki bunlardan vazgeçmek zorunda kaldım
+390: Birinin hatasını önleme gayretimin yanlış anlaşılmasına çok üzülürüm
+391: Dansa gitmeyi severim
+392: Fırtınadan çok korkarım
+393: Yük çekmeyen atlar dövülmeli ya da kamçılanmalıdır
+394: Başkalarına sık sık akıl danışırım
+395: Gelecek, bir insanın ciddi planlar yapamayacağı kadar belirsizdir
+396: İşler yolunda gittiği zaman bile çoğu kez her şeye karşı bir aldırmazlık içinde olduğumu hissederim
+397: Bazen güçlükler öylesine üst üste gelir ki onlarla baş edemeyecekmişim gibi hissederim
+398: Çoğu kez keşke tekrar çocuk olsaydım diye düşünürüm
+399: Kolay kolay kızmam
+400: Eğer bana fırsat verilse dünya için çok yararlı işler yapabilirim
+401: Sudan hiç korkmam
+402: Ne yapacağıma karar vermeden önce uzun uzun düşünürüm
+403: Birçok şeyin olup bittiği böyle bir devirde yaşamak hoş bir şey
+404: Hatalarını düzelterek kendilerine yardım etmeye çalıştığım insanlar amacımı çoğu kez yanlış anlarlar
+405: Yutkunmakta güçlük çekmem
+406: Uzman dendiği halde benden pek fazla bilgili olmayan insanlarla sık sık karşılaşırım
+407: Genel olarak sakinim ve kolay sinirlenmem
+408: Bazı konular hakkında hislerimi o kadar gizleyebilirim ki insanlar bilmeden beni incitebilirler
+409: Elimde olmadan çok ufak bir şeyden münakaşa çıkarıp karşımdakini kırıyorum
+410: Madrabazı kendi silahı ile alt etmekten hoşlanırım
+411: İyi tanıdığım bir kimsenin başarısını duyduğum zaman adeta kendimi başarısızlığı uğramış hissederim
+412: Hastalandığım zaman doktora gitmekten korkmam
+413: Günahlarım için ne kadar ağır ceza görsem iyidir
+414: Hayal kırıklıklarını o kadar ciddiye alırım ki bunları zihnimden söküp atamam
+415: Fırsat verilse iyi bir önder olurum
+416: Yakınlarımın sağlığından çok endişe ederim
+417: Sırada beklerken biri önüme geçmeye kalkışırsa ona çıkışırım
+418: Bazen hiç bir işe yaramadığımı düşünürüm
+419: Küçükken okuldan sık sık kaçardım
+420: Başımdan dinle ilgili olağan üstü yaşantılar geçti
+421: Ailemde çok sinirli insanlar var
+422: Ailemde bazı kişilerin yapmış olduğu işler beni utandırmıştır
+423: Balık tutmayı çok severim
+424: Hemen hemen her zaman açlık duyarım
+425: Sık sık rüya görürüm
+426: Kaba ya da can sıkıcı insanlara karşı bazen sert davrandığım olur
+427: Açık saçık hikayelerden utanıp rahatsız olurum
+428: Gazetelerin baş yazılarını okumaktan hoşlanırım
+429: Ciddi konular üzerinde verilen konferansları dinlemekten hoşlanırım
+430: Karşı cinsten olanları çekici bulurum
+431: Başa gelebilecek talihsizlikler beni oldukça telaşlandırır
+432: Kuvvetli siyasi fikirlerim vardır
+433: Bir zamanlar hayali arkadaşlarım vardı
+434: Otomobil yarışçısı olmayı isterdim
+435: Genel olarak kadınlarla çalışmayı tercih ederim
+436: İnsanlar genel olarak başkalarının haklarına saygı göstermekten çok kendi haklarına saygı gösterilmesini isterler
+437: Kanuna aykırı davranmadan kanunun bir gediğinden yararlanmakta zarar yoktur
+438: Bazı insanlardan o kadar nefret ederim ki ettiklerini bulunca içimden oh derim
+439: Beklemek zorunda kalmak beni sinirlendirir
+440: Başkalarına anlatmak için hoş fıkraları hatırımda tutmaya çalışırım
+441: Uzun boylu kadınlardan hoşlanırım
+442: Üzüntü yüzünden uyuyamadığım zamanlar oldu
+443: Başkalarının gereği gibi yapamadığımı sandığı şeyleri yapmaktan vaz geçtiğim oldu
+444: Başkalarının cahilce inançlarının düzeltmeye çalışmam
+445: Küçükken heyecan veren şeyler yapmaktan hoşlanırdım
+446: Az parayla oynanan kumardan hoşlanırım
+447: Mastürbasyonda kendi cinsimle ilgili hayal beni tahrik eder
+448: Sokakta, otobüs ve dükkanlarda bana bakan insanlardan rahatsız olurum
+449: İnsanlarla bir arada olmayı sağladığı için toplantı ve davetleri severim
+450: Kalabalığın verdiği coşkudan hoşlanırım
+451: Neşeli arkadaşlar arasına karışınca üzüntülerimi unuturum
+452: Arkadaş edinemiyorum
+453: Küçükken mahalledeki arkadaş ya da akran gruplarına katılmaktan hoşlanmazdım
+454: Orman ya da dağdaki bir kulübede tek başıma yaşamaktan mutlu olabilirim
+455: İçinde bulunduğum grubun dedikodularına ve konuşmalarına sıklıkla konu olmam
+456: İnsan makul bulmadığı kanunlara aykırı hareketlerinden ötürü cezalandırılmamalıdır
+457: Bence insan hiç bir zaman alkollü içkiyi ağzına almamalıdır
+458: Çocukken benimle en fazla ilgilenen erkek baba, üvey baba vb bana karşı çok sert davranırdı
+459: Çaba göstermekle yenemeyeceğimi bildiğim bazı kötü alışkanlıklarım var
+460: Az içki kullandım ya da hiç kullanmadım
+461: Kısa bir zaman için bile olsa başladığım işi bir kenara bırakmak bana güç gelir
+462: Küçük abdestimi yapmada ya da tutmada güçlük çekmem
+463: Sek sek oyunu oynamaktan hoşlanırdım
+464: Hiç hayal görmedim
+465: Bir kaç kez hayatım boyunca yaptığım işte hevesimi yitirdiğim olmuştur
+466: Doktor önerisi dışında hiçbir ilaç ya da uyku hapı kullanmadım
+467: Çok defa otomobil, plaka numarası gibi hiç önemli olmayan numaraları ezberlerim
+468: Sıklıkla sinirli ve asık suratlı olurum
+469: Onlardan önce düşündüğüm için başkaları benim fikirlerimi kıskanıyorlar
+470: Cinsiyetle ilgili şeylerden nefret ederim
+471: Okulda hal ve gidişten kırık not alırdım
+472: Yangın karşısında büyülenmiş gibi olurum
+473: Mümkün olduğu kadar kalabalıktan uzak kalmaya çalışırım
+474: Başkalarından daha sık küçük abdeste çıkmam
+475: Sıkıştırıldığım zaman gerçeğin ancak bana zarar vermeyecek kısmını söylerim
+476: Tanrı bana özel bir görev vermiştir
+477: Arkadaşlarımla birlikte işlediğim bir suçtan eşit şekilde suçlu olduğum zaman onları ele vermektense bütün suçu üzerime almayı tercih ederim
+478: Çok değişik bir aile ortamından gelmiş olmayı isterdim
+479: Yabancılarla tanışmaktan kaçınmam
+480: Karanlıktan çok defa korkarım
+481: Bir şeyden kurtulmak için hasta numarası yaptığım olmuştur
+482: Trende, otobüste vb rastladığım kimselerle çok defa konuşurum
+483: Peygamberimiz göğe çıkma gibi mucizeler göstermiştir
+484: Homoseksüelliği çok iğrenç buluyorum
+485: Bir erkek bir kadınla beraber olunca genel olarak onun cinsiyetiyle ilgili şeyler düşünür
+486: İdrarımda hiç bir zaman kan görmedim
+487: Uğraştığım iş yolunda gitmeyince hemen vaz geçerim
+488: Sık sık dua ederim
+489: Yaşamı yalnızca üzüntülü, sıkıntılı tarafları ile benimseyen insanlara sempati duyarım
+490: Haftada birkaç kere kuran okurum
+491: Sadece bir tek dinin doğruluğuna inananlara tahammül edemem
+492: Zelzele düşüncesi beni çok korkutur
+493: Tam dikkat isteyen işleri, beni dikkatsizliğe sürükleyen işlere tercih ederim
+494: Kapalı ve küçük yerlerde bulunmaktan çok rahatsız olurum
+495: Kusurlarını düzeltmeye çalıştığım insanlarla genel olarak gayet açık konuşurum
+496: Eşyayı hiçbir zaman çift görmem (Yani tek olan şeyleri çift görmem)
+497: Macera hikayelerinden hoşlanırım
+498: Açık sözlü olmak her zaman iyidir
+499: Gerçekten önemsiz olan bir şey üzerinde bazen sebepsiz olarak haddinden fazla üzüldüğüm olur
+500: Bana parlak gelen bir fikre hemen kapılır giderim
+501: Başkalarından yardım beklemektense genel olarak bir işi kendi başıma yapmayı tercih ederim
+502: Herhangi bir olay hakkındaki görüşümü başkalarına açıkça belirtmekten hoşlanırım
+503: Başkalarının hareketlerin çok beğenip beğenmediğimi pek belli etmem
+504: Değersiz gördüğüm ya da acıdığım kimseye bu duygularımı belli etmekten çekinmem
+505: Zaman zaman kendimi öyle güçlü ve enerjik hissederim ki böyle zamanlarda günlerce uykuya ihtiyaç duymadığım olur
+506: Sinirleri çok gergin bir insanım
+507: İşler iyi gidince aslan payını kendilerine alan fakat hata yapılanca bunu başkalarının üzerine atan insanlarla karşılaştım
+508: Koku alma duyum herkes kadar iyidir
+509: Bazen çekingenliğim yüzünden hakkımı arayamam
+510: Pislik ve kir beni ürkütüp iğrendirir
+511: Herkesten gizli tuttuğum bir hayal dünyam var
+512: Yıkanmaktan hoşlanmam
+513: Kış mevsimini severim
+514: Erkek gibi davranan kadınlardan hoşlanırım
+515: Evimizde daima gerekli ihtiyaç maddeleri bulunurdu (Yeteri kadar yiyecek, giyecek vb gibi)
+516: Ailemde çabuk kızan kimseler var
+517: Hiç bir şeyi iyi yapamam
+518: Bazı durumlarda olduğumdan daha fazla üzüntülü görünmeye çalıştığım olmuştur
+519: Cinsel organlarımda bir bozukluk var
+520: Genel olarak görüşlerimi kuvvetle savunurum
+521: Bir grup içinde konuşma yapmam ve çok iyi bildiğim bir konuda fikrimi söylemem istenince kaygılanmam
+522: Örümcekten korkmam
+523: Yüzüm hemen hemen hiç kızarmaz
+524: Kapı tokmaklarından hastalık veya mikrop alacağımdan korkmam
+525: Bazı hayvanlardan ürkerim
+526: Gelecek bana ümitsiz görünüyor
+527: Ailem ve yakın akrabalarım birbirleriyle oldukça iyi geçinirler
+528: Yüzüm başkalarından daha sik kızarmaz
+529: Pahalı elbiseler giymeyi isterim
+530: Sebepsiz yere sık sık içim sıkılıyor ve ağlamak istiyorum
+531: Bir konu üzerinde karar verdiğimi zannetsem bile başka biri fikrimi kolayca değiştirebilir
+532: Acıya başkaları kadar ben de dayanabilirim
+533: Sık sık geğirmekten şikayetim yoktur
+534: Çoğunlukla başladığım işten en son vazgeçen ben olurum
+535: Hemen hemen her zaman ağzımda kuruluk olur
+536: Beni acele ettirenlere kızarım
+537: Afrika'da aslan avına çıkmak isterdim
+538: Terzilikten hoşlanabileceğimi sanıyorum
+539: Fareden korkmam
+540: Yüzüme hiç felç inmedi
+541: Cildime ufak bir şeyin dokunmasından çok huylanırım
+542: Şimdiye kadar rengi kapkara büyük abdest yapmadım
+543: Haftada birkaç kez korkunç bir şey olacakmış duygusuna kapılırım
+544: Çoğu zaman yorgunluk hissederim
+545: Bazen aynı rüyayı tekrar tekrar görürüm
+546: Tarih okumaktan hoşlanırım
+547: Toplantı ve kalabalık eğlencelerden hoşlanırım
+548: Elimdeyse açık saçık numaraların yapılacağı eğence yerlerine gitmem
+549: Karşıma çıkacak güçlüklerden korkak ve kaçarım
+550: Kapı mandallarını onarmaktan hoşlanırım
+551: Bazen başkalarının kafamın içindekilerindi okuduğundan eminim
+552: Bilimsel yayınları okumaktan hoşlanırım
+553: Açık yerlerde veya geniş meydanlarda tek başıma kalmaktan korkarım
+554: Sıkıntım oldukça alkol alırım
+555: Bazen çıldıracakmış gibi olurum
+556: Kılık kıyafetime çok itina ederim
+557: Hayatı fazla ciddiye almıyorum
+558: Birçok kimseler kötü cinsel faaliyetlerinden dolayı suçludurlar
+559: Gece yarısı çoğunlukla korkuya kapıldığım olur
+560: Bir şeyi nereye koyduğumu unutmaktan çok şikayetçiyimdir
+561: Ailem benim için büyük bir dayanaktır
+562: Çocukken en fazla bağlandığım ve hayran kaldığım kimse bir kadındı
+563: Macera hikayelerini aşk hikayelerinden daha çok severim
+564: Yapmak istediğim fakat başkalarının beğenmediği bir işten kolayca vazgeçerim
+565: Yüksek bir yerde iken içimden atlama isteği gelir
+566: Sinemalardaki aşk sahnelerini severim
 }
 
 
-# 用于存放测验的原始结果
 # Used to store the original results of the questionnaire
 Ans = {
 
@@ -642,7 +650,6 @@ Ans = {
 
 def start():
     """
-    测验引导部分，含简介和指导语
     Guide section, including abstract and instruction
 
     :return: None
@@ -651,28 +658,27 @@ def start():
     time.sleep(5)
 
     while 1:
-        print('接下来将开始测验，是否开始？')
-        print('1. 是    0. 否')
+        print('The quiz will start next, do you want to start？')
+        print('1. yes    0. no')
         go = input('> ')
         if go == '1':
             print('-' * 65)
-            print('测验将在30秒后正式开始，请仔细阅读并理解以下内容')
+            print('The quiz will officially start in 30 seconds, please read and understand the following content carefully')
             time.sleep(3)
             print(Ins2)
             time.sleep(27)
             break
         elif go == '0':
-            print('感谢使用本程序，再见！')
+            print('Thanks for using this program, bye！')
             time.sleep(3)
             exit(0)
         else:
-            print('输入错误请按照测验要求重新输入！')
+            print('Input error, please re-enter according to the test requirements！')
             continue
 
 
 def answer():
     """for debug
-    随机答题
     random answer
 
     :return: '0' or '1'
@@ -684,7 +690,6 @@ def answer():
 
 def test():
     """
-    测验部分
     test section
 
     :return: None
@@ -692,34 +697,34 @@ def test():
     global Sex
     global Age
 
-    print('测验正式开始！')
+    print('The quiz has officially started！')
     print('-' * 65)
     time.sleep(3)
 
     while 1:
-        print('x1. 我的性别是')
-        print('1. 男    0.女')
+        print('x1. my gender is')
+        print('1. male    0.female')
         Sex = input('> ')
         if Sex == '1' or Sex == '0':
             break
         else:
-            print('输入错误请按照测验要求重新输入！')
+            print('Input error, please re-enter according to the test requirements！')
             continue
 
     while 1:
         print('-' * 65)
-        print('x2. 请输入你的年龄')
+        print('x2. Please enter your age')
         Age = input('> ')
 
         if str.isdigit(Age):
             if 13 <= int(Age) <= 70:
                 break
             else:
-                print('本测验不适用于该年龄范围，感谢使用！')
+                print('This quiz is not intended for this age range, thanks for using！')
                 time.sleep(3)
                 exit(0)
         else:
-            print('输入错误请按照测验要求重新输入！')
+            print('Input error, please re-enter according to the test requirements！')
             continue
 
     for i in range(len(Que)+1):
@@ -729,14 +734,14 @@ def test():
             else:
                 temp_que = str(i+1) + '. ' + (Que[i+1][Que[i+1].find('f') + 1:])
         elif i == len(Que):
-            temp_que = str(len(Que)+1) + '.' + '我保证是在专业人士指导下认真诚实地完成本次测验'
+            temp_que = str(len(Que)+1) + '.' + 'I promise to complete this quiz seriously and honestly under the guidance of professionals'
         else:
             temp_que = str(i+1) + '. ' + Que[i+1]
 
         while 1:
             print('-' * 65)
             print(temp_que)
-            print('1. 是    0. 否')
+            print('1. yes    0. no')
             temp_ans = input('> ')
             # temp_ans = answer()  # for debug
             # print('> ' + str(temp_ans))  # for debug
@@ -747,17 +752,17 @@ def test():
             elif temp_ans == 'bomb':    # for debug
                 exit(0)
             else:
-                print('输入错误请按照测验要求重新输入！')
+                print('Input error, please re-enter according to the test requirements！')
                 continue
 
     print('-' * 65)
-    print('测验结束，感谢您的配合！')
+    print('The quiz is over, thank you for your cooperation！')
     print('-' * 65)
 
 
 def is_diff(a, b):
     """
-    为异计分
+    Scoring for difference
     Add point if different
 
     :param a: the first para
@@ -776,7 +781,7 @@ def is_diff(a, b):
 
 def is_true(t):
     """
-    正向计分
+    Positive scoring
     Add point if True
 
     :param t: the para under test
@@ -793,7 +798,7 @@ def is_true(t):
 
 def is_false(t):
     """
-    反向计分
+    reverse scoring
     Add point if False
 
     :param t: the para under test
@@ -810,7 +815,7 @@ def is_false(t):
 
 def norm_select(sex):
     """
-    选择常模表（中国1982版）
+    Select Norm Table (China 1982 Edition)
     the norm select (based on Chinese 1982's)
 
     :param sex: the subjects' sex
@@ -822,7 +827,7 @@ def norm_select(sex):
     global Norm_M
     global Norm_SD
 
-    # 男性常模
+    # male pattern
     # male norm
     if sex == '1':
         Norm_M = {
@@ -875,7 +880,7 @@ def norm_select(sex):
             'Re': 4.13,
             'Cn': 3.76
         }
-    # 女性常模
+    # female pattern
     # female norm
     else:
         Norm_M = {
@@ -933,7 +938,7 @@ def norm_select(sex):
 
 def trans_t(score, m, sd):
     """
-    标准T分计算公式
+    Standard T-score calculation formula
     Standard T point conversion formula
 
     :param score: original score
@@ -952,10 +957,10 @@ def trans_t(score, m, sd):
 
 def scale_q(ori_score=0, pro_score=0):
     """
-    效度量表-疑问分数 Q
+    Validity Scale - Question Score Q
     the score of Q (? or question) scale,
 
-    由于不允许被试者存在空题，故仅记录16项重复问题的矛盾数量
+    Since the subjects are not allowed to have empty questions, only the contradictory numbers of the 16 repeated questions are recorded
     because subjects were not allowed to have blank questions,
     just record the number of contradictions of 16 repeated questions
 
@@ -965,7 +970,8 @@ def scale_q(ori_score=0, pro_score=0):
 
     :rtype: int, int
     """
-    # 原始分 original score
+    # raw score
+    # original score
     temp1 = [8, 13, 15, 16, 20, 21, 22, 23, 24, 32, 33, 35, 37, 38, 305, 317]
     temp2 = [318, 290, 314, 315, 310, 308, 326, 288, 333, 328, 323, 331, 302, 311, 366, 362]
 
@@ -980,7 +986,7 @@ def scale_q(ori_score=0, pro_score=0):
 
 def scale_l(ori_score=0, pro_score=0):
     """
-    效度量表-说谎分数 L
+    Validity Scale - Lying Score L
     the score of L (lie) scale
 
     :param ori_score: original score
@@ -989,7 +995,8 @@ def scale_l(ori_score=0, pro_score=0):
 
     :rtype: int, int
     """
-    # 原始分 original score
+    # raw score
+    # original score
     temp = [15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 195, 225, 255, 285]
 
     for i in temp:
@@ -1002,7 +1009,7 @@ def scale_l(ori_score=0, pro_score=0):
 
 def scale_f(ori_score=0, pro_score=0):
     """
-    效度量表-诈病分数 F
+    Validity Scale - Masquerade Score F
     the score of F (infrequency or fake bad) scale
 
     :param ori_score: original score
@@ -1011,7 +1018,8 @@ def scale_f(ori_score=0, pro_score=0):
 
     :rtype: int, int
     """
-    # 原始分 original score
+    # raw score
+    # original score
     temp_t = [14, 27, 31, 34, 35, 40, 42, 48, 49, 50, 53, 56, 66, 85, 121, 123, 139, 146, 151, 156, 168, 184, 197, 200,
               202, 205, 206, 209, 210, 211, 215, 218, 227, 245, 246, 247, 252, 256, 269, 275, 286, 288, 291, 293]
     temp_f = [17, 20, 54, 65, 75, 83, 112, 113, 115, 164, 169, 177, 185, 196, 199, 220, 257, 258, 272, 276]
@@ -1028,7 +1036,7 @@ def scale_f(ori_score=0, pro_score=0):
 
 def scale_k(ori_score=0, pro_score=0):
     """
-    效度量表-校正分数 K
+    Validity Scale-Adjusted Score K
     the score of K (defensiveness) scale
 
     :param ori_score: original score
@@ -1053,7 +1061,7 @@ def scale_k(ori_score=0, pro_score=0):
 
 def scale_hs(ori_score=0, pro_score=0, pro_score_add_k=0):
     """
-    临床量表-1 疑病 Hs
+    Clinical Scale-1 Hypochondria Hs
     the score of Hs (hypochondriasis) scale
 
     :param ori_score: original score
@@ -1080,7 +1088,7 @@ def scale_hs(ori_score=0, pro_score=0, pro_score_add_k=0):
 
 def scale_d(ori_score=0, pro_score=0):
     """
-    临床量表-2 抑郁 D
+    Clinical Scale-2 Depression D
     the score of D (depression) scale
 
     :param ori_score: original score
@@ -1105,7 +1113,7 @@ def scale_d(ori_score=0, pro_score=0):
 
 def scale_hy(ori_score=0, pro_score=0):
     """
-    临床量表-3 癔病 Hy
+    Clinical Scale-3 Hysteria Hy
     the score of Hy (hysteria) scale
 
     :param ori_score: original score
@@ -1131,7 +1139,7 @@ def scale_hy(ori_score=0, pro_score=0):
 
 def scale_pd(ori_score=0, pro_score=0, pro_score_add_k=0):
     """
-    临床量表-4 精神病态 Pd
+    Clinical Scale-4 Psychopathy Pd
     the score of Pd (psychopathic deviate) scale
 
     :param ori_score: original score
@@ -1160,7 +1168,7 @@ def scale_pd(ori_score=0, pro_score=0, pro_score_add_k=0):
 
 def scale_mf(ori_score=0, pro_score=0):
     """
-    临床量表-5 男子气/女子气 Mf
+    Clinical Scale-5 Manliness/Femininity Mf
     the score of Mf (masculinity-femininity) scale
 
     :param ori_score: original score
@@ -1169,13 +1177,15 @@ def scale_mf(ori_score=0, pro_score=0):
 
     :rtype: int, int
     """
-    # 男性女性化 Mf-m
+    # masculine feminization
+    # Mf-m
     if Sex == '1':
         temp_t = [4, 25, 69, 70, 74, 77, 78, 87, 92, 126, 132, 134, 140, 149, 179, 187, 203, 204, 217, 226, 231, 239,
                   261, 278, 282, 295, 297, 299]
         temp_f = [1, 19, 26, 28, 79, 80, 81, 89, 99, 112, 115, 116, 117, 120, 133, 144, 176, 198, 213, 214, 219, 221,
                   223, 229, 249, 254, 260, 262, 264, 280, 283, 300]
-    # 女性男性化 Mf-f
+    # feminine masculinity
+    # Mf-f
     else:
         temp_t = [4, 25, 70, 74, 77, 78, 87, 92, 126, 132, 133, 134, 140, 149, 187, 203, 204, 217, 226, 239, 261, 278,
                   282, 295, 299]
@@ -1194,7 +1204,7 @@ def scale_mf(ori_score=0, pro_score=0):
 
 def scale_pa(ori_score=0, pro_score=0):
     """
-    临床量表-6 妄想狂 Pa
+    Clinical Scale-6 Paranoia Pa
     the score of Pa (paranoia) scale
 
     :param ori_score: original score
@@ -1219,7 +1229,7 @@ def scale_pa(ori_score=0, pro_score=0):
 
 def scale_pt(ori_score=0, pro_score=0, pro_score_add_k=0):
     """
-    临床量表-7 精神衰弱 Pt
+    Clinical Scale-7 Mental Asthenia Pt
     the score of Pt (psychasthenia) scale
 
     :param ori_score: original score
@@ -1247,7 +1257,7 @@ def scale_pt(ori_score=0, pro_score=0, pro_score_add_k=0):
 
 def scale_sc(ori_score=0, pro_score=0, pro_score_add_k=0):
     """
-    临床量表-8 精神分裂症 Sc
+    Clinical Scale-8 Schizophrenia Sc
     the score of Sc (schizophrenia) scale
 
     :param ori_score: original score
@@ -1276,7 +1286,7 @@ def scale_sc(ori_score=0, pro_score=0, pro_score_add_k=0):
 
 def scale_ma(ori_score=0, pro_score=0, pro_score_add_k=0):
     """
-    临床量表-9 轻躁狂 Ma
+    Clinical Scale-9 Hypomania Ma
     the score of Ma (hypomania) scale
 
     :param ori_score: original score
@@ -1304,7 +1314,7 @@ def scale_ma(ori_score=0, pro_score=0, pro_score_add_k=0):
 
 def scale_si(ori_score=0, pro_score=0):
     """
-    临床量表-0 社会内向性 Si
+    Clinical Scale-0 Social Introversion Si
     the score of Si (social introversion) scale
 
     :param ori_score: original score
@@ -1330,7 +1340,7 @@ def scale_si(ori_score=0, pro_score=0):
 
 def scale_mas(ori_score=0, pro_score=0):
     """
-    附加量表- 外显性焦虑 Mas
+    Additional Scale - Explicit Anxiety Mas
     the score of Mas (Manifest anxiety) scale
 
     :param ori_score: original score
@@ -1355,7 +1365,7 @@ def scale_mas(ori_score=0, pro_score=0):
 
 def scale_dy(ori_score=0, pro_score=0):
     """
-    附加量表- 依赖性 Dy
+    Additional Scale - Dependency Dy
     the score of Dy (Dependency) scale
 
     :param ori_score: original score
@@ -1381,7 +1391,7 @@ def scale_dy(ori_score=0, pro_score=0):
 
 def scale_do(ori_score=0, pro_score=0):
     """
-    附加量表- 支配性 Do
+    Additional Scale - Dominance Do
     the score of Do (Dominance) scale
 
     :param ori_score: original score
@@ -1405,7 +1415,7 @@ def scale_do(ori_score=0, pro_score=0):
 
 def scale_re(ori_score=0, pro_score=0):
     """
-    附加量表- 社会责任感 Re
+    Additional Scale - Social Responsibility Re
     the score of Re (Social Responsibility) scale
 
     :param ori_score: original score
@@ -1430,7 +1440,7 @@ def scale_re(ori_score=0, pro_score=0):
 
 def scale_cn(ori_score=0, pro_score=0):
     """
-    附加量表- 控制 Cn
+    Additional Scale - Control Cn
     the score of Cn (Control) scale
 
     :param ori_score: original score
@@ -1455,7 +1465,7 @@ def scale_cn(ori_score=0, pro_score=0):
 
 def calculate_score():
     """
-    测验分数计算
+    Test Score Calculation
     calculate the score
 
     :return: None
@@ -1495,10 +1505,10 @@ def calculate_score():
 
 def analyze_score():
     """
-    分析测验分数
+    Analyzing Test Scores
     analyze the score of test
 
-    利用两点编码法以及剖析图方式呈现被测者的人格特点
+    Use the two-point coding method and the analysis chart to present the personality characteristics of the subjects
     Use 2 point codes and personality profile to show the personality traits of the subjects
 
     :return:None
@@ -1577,52 +1587,53 @@ def analyze_score():
 
 def data_export():
     """
-    导出数据
+    export data
+
     export test data
 
     :return: None
 
     Note: Generate a '.xlsx' file to save the test information
     """
-    print('请输入被试者姓名')
+    print('Please enter the subject's name')
     name = input('> ')
     wb = Workbook()
-    data_filename = time.strftime("%Y%m%d_%H%M_", time.localtime()) + name + '_MMPI测验'
+    data_filename = time.strftime("%Y%m%d_%H%M_", time.localtime()) + name + '_MMPI-test'
 
-    font1 = Font(name='黑体', size=12)
-    font2 = Font(name='宋体', size=12)
+    font1 = Font(name='Times New Roman', size=12)
+    font2 = Font(name='Times New Roman', size=12)
     font3 = Font(name='Times New Roman', size=12, bold=True)
     font4 = Font(name='Times New Roman', size=12)
     alig1 = Alignment(horizontal='center', vertical='center')
     alig2 = Alignment(horizontal='general', vertical='center')
 
-    # 表1，记录测验原始数据
+    # Table 1. Raw data of record test
     sheet1 = wb.active
-    sheet1.title = '测验原始数据'
-    sheet1['A1'] = '姓名'
+    sheet1.title = 'quiz raw data'
+    sheet1['A1'] = 'Name'
     sheet1['A1'].font = font1
     sheet1['A1'].alignment = alig1
-    sheet1['C1'] = '性别'
+    sheet1['C1'] = 'gender'
     sheet1['C1'].font = font1
     sheet1['C1'].alignment = alig1
-    sheet1['E1'] = '年龄'
+    sheet1['E1'] = 'age'
     sheet1['E1'].font = font1
     sheet1['E1'].alignment = alig1
     sheet1.merge_cells('A2:B2')
-    sheet1['A2'] = '题 目'
+    sheet1['A2'] = 'Topic'
     sheet1['A2'].font = font1
     sheet1['A2'].alignment = alig1
     sheet1.merge_cells('C2:D2')
-    sheet1['C2'] = '回 答'
+    sheet1['C2'] = 'answer'
     sheet1['C2'].font = font1
     sheet1['C2'].alignment = alig1
     sheet1['B1'] = name
     sheet1['B1'].font = font2
     sheet1['B1'].alignment = alig1
     if Sex == '1':
-        sex_name = '男'
+        sex_name = 'male'
     else:
-        sex_name = '女'
+        sex_name = 'female'
     sheet1['D1'] = sex_name
     sheet1['D1'].font = font2
     sheet1['D1'].alignment = alig1
@@ -1636,7 +1647,7 @@ def data_export():
             else:
                 temp_que = Que[i+1][Que[i+1].find('f') + 1:]
         elif i == len(Que):
-            temp_que = '我保证是在专业人士指导下认真诚实地完成本次测验'
+            temp_que = 'I promise to complete this quiz seriously and honestly under the guidance of professionals'
         else:
             temp_que = Que[i+1]
 
@@ -1657,15 +1668,15 @@ def data_export():
             sheet1['D%d' % (i + 3)].font = font2
             sheet1['D%d' % (i + 3)].alignment = alig1
 
-    # 表2，记录测验分数
-    sheet2 = wb.create_sheet(title='测验分数')
-    sheet2['A1'] = '姓名'
+    # Table 2, Recording Test Scores
+    sheet2 = wb.create_sheet(title='test score')
+    sheet2['A1'] = 'Name'
     sheet2['A1'].font = font1
     sheet2['A1'].alignment = alig1
-    sheet2['C1'] = '性别'
+    sheet2['C1'] = 'gender'
     sheet2['C1'].font = font1
     sheet2['C1'].alignment = alig1
-    sheet2['E1'] = '年龄'
+    sheet2['E1'] = 'age'
     sheet2['E1'].font = font1
     sheet2['E1'].alignment = alig1
     sheet2['B1'].value = name
@@ -1677,19 +1688,19 @@ def data_export():
     sheet2['F1'].value = Age
     sheet2['F1'].font = font4
     sheet2['F1'].alignment = alig1
-    sheet2['A2'] = '量表类别'
+    sheet2['A2'] = 'Scale category'
     sheet2['A2'].font = font1
     sheet2['A2'].alignment = alig1
-    sheet2['B2'] = '原始分'
+    sheet2['B2'] = 'raw score'
     sheet2['B2'].font = font1
     sheet2['B2'].alignment = alig1
-    sheet2['C2'] = '标准分（不加K）'
+    sheet2['C2'] = 'Standard score (without K) '
     sheet2['C2'].font = font1
     sheet2['C2'].alignment = alig1
-    sheet2['D2'] = '标准分（加K）'
+    sheet2['D2'] = 'Standard score (plus K) '
     sheet2['D2'].font = font1
     sheet2['D2'].alignment = alig1
-    sheet2['A3'] = '*其中Q量表仅记录矛盾题的数量'
+    sheet2['A3'] = 'The Q* scale only records the number of contradictory questions'
     sheet2['A3'].font = font2
     sheet2['A3'].alignment = alig2
     scale_list = ['Q*', 'L', 'F', 'K', 'Hs', 'D', 'Hy', 'Pd', 'Mf', 'Pa', 'Pt', 'Sc', 'Ma', 'Si',
@@ -1726,7 +1737,7 @@ def data_export():
             sheet2['D%d' % (i + 4)].alignment = alig1
         else:
             pass
-    sheet2['E2'] = '两点编码'
+    sheet2['E2'] = 'two point encoding'
     sheet2['E2'].font = font1
     sheet2['E2'].alignment = alig1
     sheet2['F2'].value = two_point
@@ -1734,5 +1745,5 @@ def data_export():
     sheet2['F2'].alignment = alig1
 
     wb.save(filename=data_filename + '.xlsx')
-    plt.title('%s MMPI剖析图 加K分校正T分（中国常模）' % name)
+    plt.title('%s MAnatomical diagram Add K points to correct T points (Chinese norm)' % name)
     plt.savefig(data_filename)
